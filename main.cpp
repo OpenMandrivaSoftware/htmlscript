@@ -9,19 +9,27 @@
 
 int main(int argc, char **argv) {
 	QApplication app(argc, argv);
-	app.setApplicationName("OM Welcome");
-	app.setApplicationVersion("2.0");
+	app.setApplicationVersion("1.0.1");
 
 	QCommandLineParser cl;
-	cl.setApplicationDescription("OpenMandriva welcome panel");
+	cl.setApplicationDescription(QCoreApplication::translate("main", "HTML Script Runner"));
 	cl.addHelpOption();
 	cl.addVersionOption();
 	cl.addPositionalArgument("startpage", QCoreApplication::translate("main", "Start page"));
 	QCommandLineOption size("s", QCoreApplication::translate("size", "Initial size"), "size", "870x520");
 	QCommandLineOption icon("i", QCoreApplication::translate("icon", "Application icon"), "icon", "/usr/share/icons/openmandriva.svg");
 	QCommandLineOption c("c", QCoreApplication::translate("main", "Ignored, for compatibility with old version"));
-	cl.addOptions(QList<QCommandLineOption>() << size << icon << c);
+	QCommandLineOption title("t", QCoreApplication::translate("main", "Application title"), "title", "HTML Script Runner");
+	cl.addOptions(QList<QCommandLineOption>() << size << icon << c << title);
 	cl.process(app);
+
+	QString t=cl.value(title);
+	if(!t.isEmpty())
+		// We allow overriding the application name because that's the
+		// window title -- and we want OM Welcome to have a different
+		// title than Control Center and whatever else may use
+		// htmlscript in the future
+		app.setApplicationName(t);
 
 	unsigned int w, h;
 	QString s=cl.value(size);
