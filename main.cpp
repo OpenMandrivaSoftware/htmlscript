@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 		startpage = fi.fileName();
 	}
 
-	QWebEngineView *l=new QWebEngineView(0);
+	QWebEngineView *l=new QWebEngineView(static_cast<QWidget*>(nullptr));
 	l->setWindowIcon(QIcon(cl.value(icon)));
 	Page *p=new Page(dir, l);
 	l->setPage(p);
