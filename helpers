@@ -1,6 +1,37 @@
 #!/bin/sh
 # Helper functions to be called by htmlscript applications
 
+ProgressDialog() {
+	if [ "$1" = "--close" ]; then
+		$QDBUS $PROGRESS_DIALOG org.kde.kdialog.ProgressDialog.close
+		unset PROGRESS_DIALOG
+		return
+	fi
+
+	if [ -e /usr/lib64/qt6/bin/qdbus ]; then
+		QDBUS=/usr/lib64/qt6/bin/qdbus
+	elif [ -e /usr/lib/qt6/bin/qdbus ]; then
+		QDBUS=/usr/lib/qt6/bin/qdbus
+	elif [ -e /usr/bin/qdbus ]; then
+		QDBUS=/usr/bin/qdbus
+	else
+		pkexec dnf install --assumeyes qt6-qttools-dbus
+		if [ -e /usr/lib64/qt6/bin/qdbus ]; then
+			QDBUS=/usr/lib64/qt6/bin/qdbus
+		elif [ -e /usr/lib/qt6/bin/qdbus ]; then
+			QDBUS=/usr/lib/qt6/bin/qdbus
+		fi
+	fi
+	if [ -z "$QDBUS" ]; then
+		# If the user denied installing qt6-qttools-dbus or
+		# installation failed, ignore it, we only need it to
+		# control the progress indicator, so it isn't vital
+		QDBUS=true
+	fi
+	PROGRESS_DIALOG=$(kdialog --title $"OpenMandriva" --progressbar "$1" 0)
+	$QDBUS $PROGRESS_DIALOG org.kde.kdialog.ProgressDialog.showCancelButton false
+}
+
 install_if_needed() {
 	if ! rpm -q $1 &>/dev/null; then
 		if [ -n "$2" ]; then
@@ -8,30 +39,9 @@ install_if_needed() {
 		else
 			APP="$1"
 		fi
-		DB=$(kdialog --title $"OpenMandriva" --progressbar $"Installing $APP" 0)
-		if [ -e /usr/lib64/qt6/bin/qdbus ]; then
-			QDBUS=/usr/lib64/qt6/bin/qdbus
-		elif [ -e /usr/lib/qt6/bin/qdbus ]; then
-			QDBUS=/usr/lib/qt6/bin/qdbus
-		elif [ -e /usr/bin/qdbus ]; then
-			QDBUS=/usr/bin/qdbus
-		else
-			pkexec dnf install --assumeyes qt6-qttools-dbus
-			if [ -e /usr/lib64/qt6/bin/qdbus ]; then
-				QDBUS=/usr/lib64/qt6/bin/qdbus
-			elif [ -e /usr/lib/qt6/bin/qdbus ]; then
-				QDBUS=/usr/lib/qt6/bin/qdbus
-			fi
-		fi
-		if [ -z "$QDBUS" ]; then
-			# If the user denied installing qt6-qttools-dbus or
-			# installation failed, ignore it, we only need it to
-			# control the progress indicator, so it isn't vital
-			QDBUS=true
-		fi
-		$QDBUS $DB org.kde.kdialog.ProgressDialog.showCancelButton false
+		ProgressDialog $"Installing $APP"
 		pkexec dnf install --assumeyes "$1"
-		$QDBUS $DB org.kde.kdialog.ProgressDialog.close
+		ProgressDialog --close
 		if ! rpm -q $1 &>/dev/null; then
 			kdialog --title $"OpenMandriva" --msgbox $"Installation failed."
 			exit 1
