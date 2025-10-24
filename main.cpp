@@ -9,7 +9,7 @@
 
 int main(int argc, char **argv) {
 	QApplication app(argc, argv);
-	app.setApplicationVersion("1.2.0");
+	app.setApplicationVersion("1.3.0");
 
 	QCommandLineParser cl;
 	cl.setApplicationDescription(QCoreApplication::translate("main", "HTML Script Runner"));
